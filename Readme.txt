@@ -1,6 +1,6 @@
 # Tempec
 
-Tempec es una unidad de conservacion utilizada para convervar medicamentos, sangre, semen, etc. de distintas especies. en el sector pecuario.
+Tempec es una unidad de conservacion utilizada para conservar medicamentos, sangre, semen, etc. de distintas especies. en el sector pecuario.
 
 Antecedentes:
 El manejo y control de la temperatura en las unidades actuales es inexacto, el rango en el que actua tanto compresor (enfria) y resistencia (calienta) es muy grande, teniendo un minimno de 1 grado centrigado arriba y 1 grado abajo para funcionar
