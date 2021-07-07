@@ -1,65 +1,88 @@
 #include <Arduino.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <Adafruit_SSD1306.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_I2CDevice.h>
+
+Adafruit_SSD1306 display(-1);
+// Declaracion de funciones
+void ventiladorAccion();
+void subeLimite();
+void bajaLimite();
 
 // se define pin para usar con one wire
-#define ONE_WIRE_BUS 2
+#define ONE_WIRE_BUS 6
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensor (&oneWire);
 
-float temperature;
 // declaracion de variables
-int led = 5;
-int btn = 3;
-// bool estadoPulsador;
-// long tiempoAnterior;
-// long diferencia;
-//se debe de declarar todas las funciones de forma global
-// void consulta_estado();
+float temperature;
+int btnUp = 3;
+int btnDown = 2;
+int ventilador = 5;
+bool ventiladorActivado = false;
+int limite = 29;
+long contador1 = 0;
+
+//variables almacenadoras de milisegundos
+long tiempoAnteriorUp;
+long tiempoAnteriorDown;
+long diferenciaUp;
+long diferenciaDown;
 
 void setup() {
   Serial.begin(9600);
   Serial.println("Iniciando sensor temperatura");
+  pinMode (ventilador, OUTPUT);
 
-// declaracion de variables como in-out
-  // pinMode(btn, INPUT_PULLUP);
-  // pinMode(led, OUTPUT);
-
-
-  // // attachInterrupt es una funcion para activar interrupciones, podria recibir solo el nombre del pin, pero arduino recomienda que sea pasado con otra funcion, digitalPinToInterrupt, el cual recibe como parametro el pin, asi mismo atachInterrupt recibe 3 parametros, el pin, la funcion que se activara con ese pin, esta se escribe sin parentesis, y por ultimo cuando debe activarse la interrupcion, existen diferentes estados, RISING, FALLING, LOW, etc 
-  // attachInterrupt(digitalPinToInterrupt(btn), consulta_estado, CHANGE);
+// interrupcion para subir limite
+  pinMode(btnUp, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(btnUp), subeLimite, RISING);
+  pinMode(btnDown, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(btnDown), bajaLimite, RISING);
 }
-
 void loop() {
-
+  //forma correcta de ejecutar una funcion cada cierto tiempo
+if(millis() - contador1 > 600){
+  contador1 = millis();
   sensor.requestTemperatures();
   temperature = sensor.getTempCByIndex(0);
-  // Serial.println("Temperatura obtenida");  
-  Serial.println("La temperatura es: " + String (temperature));
   
+  ventiladorAccion();
+
+  }
+
 }
 
-// void consulta_estado(){
- 
-//     diferencia = millis() - tiempoAnterior;
-//     tiempoAnterior = millis();
-//     Serial.println(diferencia);
+//funcion para encender apagar un ventilador
+void ventiladorAccion(){
+  if(temperature > limite){
+  digitalWrite(ventilador, HIGH);
+  ventiladorActivado = true;
+  Serial.println("ventilador Activado" + String (temperature)); 
+  } else {
+  digitalWrite(ventilador, LOW);
+  ventiladorActivado = false;
+  Serial.println("Ventilador desactivado" +String(temperature));
+  }
+}
 
-//     if(diferencia > 250){
+//funcion para subir setpoint
+void subeLimite(){
+  diferenciaUp = millis() - tiempoAnteriorUp;
+  tiempoAnteriorUp = millis(); 
+  if (diferenciaUp > 250){
+  limite ++;
+  Serial.println("Limite: " + String(limite));
+  }
+}
 
-//     // si el led esta encendido
-//    if(digitalRead(led) == true){
-//     //  apago el led
-//      digitalWrite(led,LOW);
-//      Serial.println("Apagado");
-//   // le damos un delay para hacer antirebote
-//     //  delay(400);
-//    } else {
-//     //  si el led esta apagado enciendo el led
-//     digitalWrite(led, HIGH);
-//     Serial.println("Encendido");
-//     // delay(400);
-//       }   
-//     }
-//     }
-  
+void bajaLimite(){
+  diferenciaDown = millis() - tiempoAnteriorDown;
+  tiempoAnteriorDown = millis(); 
+  if (diferenciaDown > 250){
+  limite --;
+  Serial.println("Limite: " + String(limite));
+  }
+}
